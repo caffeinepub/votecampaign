@@ -28,10 +28,9 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-import type { DonationRecord, Supporter, SurveyResponse } from "../backend.d";
+import type { Supporter, SurveyResponse } from "../backend.d";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
-  useAllDonationRecords,
   useAllSupporters,
   useAllSurveyResponses,
   useInitializeAdmin,
@@ -55,20 +54,16 @@ const ISSUE_COLORS: Record<string, string> = {
 function InsightsTab({
   supporters,
   responses,
-  donations,
 }: {
   supporters: Supporter[] | undefined;
   responses: SurveyResponse[] | undefined;
-  donations: DonationRecord[] | undefined;
 }) {
   const s = supporters ?? [];
   const r = responses ?? [];
-  const d = donations ?? [];
 
   const totalSupporters = s.length;
   const totalVolunteers = r.filter((res) => res.wouldVolunteer).length;
   const totalDonors = r.filter((res) => res.wouldDonate).length;
-  const donationsRecorded = d.length;
 
   const totalResponses = r.length;
   const volunteerPct =
@@ -90,7 +85,6 @@ function InsightsTab({
     if (key in issueCounts) {
       issueCounts[key] = (issueCounts[key] ?? 0) + 1;
     } else {
-      // map partial matches
       if (key.toLowerCase().includes("corrupt"))
         issueCounts.Corruption = (issueCounts.Corruption ?? 0) + 1;
       else if (key.toLowerCase().includes("health"))
@@ -105,9 +99,6 @@ function InsightsTab({
 
   // Recent activity
   const recentSupporters = [...s]
-    .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
-    .slice(0, 3);
-  const recentDonations = [...d]
     .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
     .slice(0, 3);
 
@@ -134,8 +125,8 @@ function InsightsTab({
       bg: "bg-orange-50",
     },
     {
-      label: "Donations Recorded",
-      value: donationsRecorded,
+      label: "Survey Responses",
+      value: totalResponses,
       icon: BarChart2,
       color: "text-purple-600",
       bg: "bg-purple-50",
@@ -158,22 +149,13 @@ function InsightsTab({
       "Share Reason": res.shareReason,
     }));
 
-    const donationRows = d.map((don, i) => ({
-      "#": i + 1,
-      "Donor Name": don.donorName,
-      "Transaction ID": don.transactionId,
-      Amount: don.amount,
-      Date: formatTimestamp(don.timestamp),
-    }));
-
     exportMultiSheet("voice2026-campaign-data.xlsx", [
       { name: "Supporters", rows: supporterRows },
       { name: "Survey Responses", rows: responseRows },
-      { name: "Donations", rows: donationRows },
     ]);
   }
 
-  const hasAnyData = s.length > 0 || r.length > 0 || d.length > 0;
+  const hasAnyData = s.length > 0 || r.length > 0;
 
   return (
     <div className="space-y-8" data-ocid="insights.panel">
@@ -306,101 +288,48 @@ function InsightsTab({
       </Card>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="shadow-sm border-border/60">
-          <CardContent className="pt-5 pb-5">
-            <h3 className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
-              <Users className="w-4 h-4 text-muted-foreground" />
-              Recent Supporters
-            </h3>
-            {recentSupporters.length === 0 ? (
-              <p
-                className="text-muted-foreground text-sm"
-                data-ocid="recent-supporters.empty_state"
-              >
-                No supporters yet.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {recentSupporters.map((sup, i) => (
-                  <div
-                    key={String(sup.id)}
-                    className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
-                    data-ocid={`recent-supporters.item.${i + 1}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
-                        <span className="text-blue-700 text-xs font-bold">
-                          {sup.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <span className="text-sm font-medium text-foreground">
-                        {sup.name}
+      <Card className="shadow-sm border-border/60">
+        <CardContent className="pt-5 pb-5">
+          <h3 className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
+            <Users className="w-4 h-4 text-muted-foreground" />
+            Recent Supporters
+          </h3>
+          {recentSupporters.length === 0 ? (
+            <p
+              className="text-muted-foreground text-sm"
+              data-ocid="recent-supporters.empty_state"
+            >
+              No supporters yet.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {recentSupporters.map((sup, i) => (
+                <div
+                  key={String(sup.id)}
+                  className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
+                  data-ocid={`recent-supporters.item.${i + 1}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-blue-700 text-xs font-bold">
+                        {sup.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(
-                        Number(sup.timestamp) / 1_000_000,
-                      ).toLocaleDateString()}
+                    <span className="text-sm font-medium text-foreground">
+                      {sup.name}
                     </span>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-border/60">
-          <CardContent className="pt-5 pb-5">
-            <h3 className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-muted-foreground" />
-              Recent Donations
-            </h3>
-            {recentDonations.length === 0 ? (
-              <p
-                className="text-muted-foreground text-sm"
-                data-ocid="recent-donations.empty_state"
-              >
-                No donations recorded yet.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {recentDonations.map((don, i) => (
-                  <div
-                    key={String(don.id)}
-                    className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
-                    data-ocid={`recent-donations.item.${i + 1}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
-                        <span className="text-green-700 text-xs font-bold">
-                          {don.donorName.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-foreground block">
-                          {don.donorName}
-                        </span>
-                        <Badge
-                          className="bg-green-100 text-green-700 border-green-200 text-xs"
-                          variant="outline"
-                        >
-                          {don.amount}
-                        </Badge>
-                      </div>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(
-                        Number(don.timestamp) / 1_000_000,
-                      ).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(
+                      Number(sup.timestamp) / 1_000_000,
+                    ).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -527,8 +456,6 @@ export function AdminPage() {
   const { data: supporters, isLoading: supportersLoading } = useAllSupporters();
   const { data: responses, isLoading: responsesLoading } =
     useAllSurveyResponses();
-  const { data: donations, isLoading: donationsLoading } =
-    useAllDonationRecords();
 
   function handleExportSupporters() {
     const rows = (supporters ?? []).map((s, i) => ({
@@ -549,17 +476,6 @@ export function AdminPage() {
       "Share Reason": r.shareReason,
     }));
     exportSheet("survey-responses.xlsx", "Survey Responses", rows);
-  }
-
-  function handleExportDonations() {
-    const rows = (donations ?? []).map((d, i) => ({
-      "#": i + 1,
-      "Donor Name": d.donorName,
-      "Transaction ID": d.transactionId,
-      Amount: d.amount,
-      Date: formatTimestamp(d.timestamp),
-    }));
-    exportSheet("donations.xlsx", "Donations", rows);
   }
 
   return (
@@ -679,7 +595,7 @@ export function AdminPage() {
                 Campaign Dashboard
               </h1>
               <p className="text-muted-foreground text-sm">
-                Manage supporters, survey responses, donations, and insights.
+                Manage supporters, survey responses, and campaign insights.
               </p>
             </div>
 
@@ -706,18 +622,6 @@ export function AdminPage() {
                   {responses && (
                     <Badge variant="secondary" className="ml-1 text-xs">
                       {responses.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="donations"
-                  className="gap-2"
-                  data-ocid="admin.tab"
-                >
-                  <DollarSign className="w-4 h-4" /> Donations
-                  {donations && (
-                    <Badge variant="secondary" className="ml-1 text-xs">
-                      {donations.length}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -918,102 +822,9 @@ export function AdminPage() {
                 </div>
               </TabsContent>
 
-              {/* ── Donations Tab ── */}
-              <TabsContent value="donations" data-ocid="admin.table">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-semibold text-foreground">Donations</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleExportDonations}
-                    disabled={!donations || donations.length === 0}
-                    data-ocid="donations.secondary_button"
-                  >
-                    <Download className="w-4 h-4 mr-1.5" />
-                    Export Excel
-                  </Button>
-                </div>
-                <div className="rounded-xl border border-border/60 overflow-hidden shadow-card">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="font-semibold">#</TableHead>
-                        <TableHead className="font-semibold">
-                          Donor Name
-                        </TableHead>
-                        <TableHead className="font-semibold">
-                          Transaction ID
-                        </TableHead>
-                        <TableHead className="font-semibold">Amount</TableHead>
-                        <TableHead className="font-semibold">Date</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {donationsLoading ? (
-                        Array.from({ length: 5 }).map((_, i) => (
-                          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton rows
-                          <TableRow key={i}>
-                            {Array.from({ length: 5 }).map((_, j) => (
-                              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton cells
-                              <TableCell key={j}>
-                                <Skeleton className="h-4 w-20" />
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))
-                      ) : donations && donations.length > 0 ? (
-                        donations.map((d, i) => (
-                          <TableRow
-                            key={String(d.id)}
-                            data-ocid={`donations.item.${i + 1}`}
-                          >
-                            <TableCell className="text-muted-foreground text-sm">
-                              {i + 1}
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {d.donorName}
-                            </TableCell>
-                            <TableCell className="font-mono text-sm text-muted-foreground">
-                              {d.transactionId}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                className="bg-green-100 text-green-700 border-green-200"
-                                variant="outline"
-                              >
-                                {d.amount}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                              {new Date(
-                                Number(d.timestamp) / 1_000_000,
-                              ).toLocaleDateString()}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="text-center py-12 text-muted-foreground"
-                            data-ocid="donations.empty_state"
-                          >
-                            No donation records yet.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-
               {/* ── Insights Tab ── */}
               <TabsContent value="insights" data-ocid="admin.panel">
-                <InsightsTab
-                  supporters={supporters}
-                  responses={responses}
-                  donations={donations}
-                />
+                <InsightsTab supporters={supporters} responses={responses} />
               </TabsContent>
             </Tabs>
           </div>
