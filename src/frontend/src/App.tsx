@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { AdminPage } from "./pages/AdminPage";
 import { HomePage } from "./pages/HomePage";
+import { PrivacyPage } from "./pages/PrivacyPage";
 
 const rootRoute = createRootRoute();
 
@@ -21,7 +22,13 @@ const adminRoute = createRoute({
   component: AdminPage,
 });
 
-const routeTree = rootRoute.addChildren([homeRoute, adminRoute]);
+const privacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/privacy",
+  component: PrivacyPage,
+});
+
+const routeTree = rootRoute.addChildren([homeRoute, adminRoute, privacyRoute]);
 
 const router = createRouter({ routeTree });
 

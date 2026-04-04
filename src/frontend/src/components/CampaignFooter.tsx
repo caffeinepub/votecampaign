@@ -7,6 +7,7 @@ const FOOTER_LINKS = [
   { label: "Pledge", href: "#pledge" },
   { label: "Survey", href: "#survey" },
   { label: "Share", href: "#share" },
+  { label: "Privacy Policy", href: "/privacy" },
   { label: "Admin", href: "/admin" },
 ];
 

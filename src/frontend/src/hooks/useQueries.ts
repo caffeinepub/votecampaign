@@ -165,3 +165,18 @@ export function useIsCallerAdmin() {
     enabled: !!rawActor && !isFetching,
   });
 }
+
+export function useInitializeAdmin() {
+  const { actor: rawActor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (token: string) => {
+      const actor = getBackend(rawActor);
+      if (!actor) throw new Error("Backend not available");
+      await actor._initializeAccessControlWithSecret(token);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["isCallerAdmin"] });
+    },
+  });
+}

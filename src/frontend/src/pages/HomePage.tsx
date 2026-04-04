@@ -8,6 +8,7 @@ import { HeroSection } from "../components/HeroSection";
 import { PledgeForm } from "../components/PledgeForm";
 import { ShareSection } from "../components/ShareSection";
 import { StatsSection } from "../components/StatsSection";
+import { StorytellingSection } from "../components/StorytellingSection";
 import { SurveySection } from "../components/SurveySection";
 import { usePublicStats } from "../hooks/useQueries";
 
@@ -20,6 +21,7 @@ export function HomePage() {
       <CampaignHeader />
       <main>
         <HeroSection />
+        <StorytellingSection />
         <StatsSection stats={stats} isLoading={statsLoading} />
         <DonationSection />
         <div className="bg-muted/30">

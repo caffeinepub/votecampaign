@@ -113,7 +113,9 @@ function DonationRecordForm() {
 
     if (result.__kind__ === "ok") {
       setSubmitted(true);
-      toast.success("Donation recorded! Thank you for your support.");
+      toast.success(
+        "💰 Donation recorded! Thank you for supporting the campaign.",
+      );
     } else {
       toast.error(
         result.value || "Failed to record donation. Please try again.",

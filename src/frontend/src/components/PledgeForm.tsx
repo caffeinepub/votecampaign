@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { usePledgeSupport } from "../hooks/useQueries";
 import { StepMarker } from "./StepMarker";
 
@@ -48,6 +49,9 @@ export function PledgeForm({ onPledgeSuccess }: PledgeFormProps) {
     });
     if (result.__kind__ === "ok") {
       setSuccess(true);
+      toast.success(
+        "🎉 New supporter joined! Thank you for pledging your vote.",
+      );
       onPledgeSuccess(result.value);
       setTimeout(() => {
         document
